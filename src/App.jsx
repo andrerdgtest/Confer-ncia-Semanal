@@ -1125,9 +1125,8 @@ function TagCentroCusto({ relacionados, override }) {
   if (override) {
     return (
       <span style={{
-        fontSize: 11.5, color: CORES.accent, whiteSpace: "nowrap",
+        fontSize: 11.5, color: CORES.textoSub, whiteSpace: "nowrap",
         overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: 180,
-        fontStyle: "italic",
       }} title={override}>
         {override}
       </span>
@@ -1256,7 +1255,7 @@ function LinhaTabela({ r, onEditar }) {
       </td>
       <td style={{ padding: "12px 18px" }}><TagCustoDespesa valor={custoDespesa} divergente={!r.custoDespesaManual && r.custoDespesaDivergente} /></td>
       <td style={{ padding: "12px 18px", fontSize: 12, color: tipoEfetivo === "ok" ? (isParcelaEfetiva(r) ? CORES.textoSub : CORES.ok) : c.color }}>
-        {r.detalhes}
+        {tipoEfetivo === "ok" && r.statusManual ? "" : tipoEfetivo === "devolucao" && r.statusManual ? "Devolução" : r.detalhes}
         <Pencil size={11} color={CORES.textoFraco} style={{ marginLeft: 7, opacity: hover ? 1 : 0, transition: "opacity 0.12s", verticalAlign: "middle" }} />
       </td>
       <td style={{ padding: "12px 18px", fontSize: 12, color: CORES.textoSub, fontStyle: r.observacao ? "normal" : "italic" }}>
