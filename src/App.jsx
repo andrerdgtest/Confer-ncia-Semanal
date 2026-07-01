@@ -557,6 +557,61 @@ function gerarPlanilhaPreenchida(buffer, resultados, tipoPlanilha, nomeArquivo) 
 }
 
 /* ============================ Componentes UI ============================ */
+
+// Injeta CSS global para transições reutilizáveis
+if (typeof document !== "undefined" && !document.getElementById("nf-transitions")) {
+  const style = document.createElement("style");
+  style.id = "nf-transitions";
+  style.textContent = `
+    .nf-modal-overlay {
+      animation: nfFadeIn 0.18s ease;
+    }
+    .nf-modal-panel {
+      animation: nfSlideUp 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+    .nf-dropdown {
+      animation: nfFadeScale 0.16s cubic-bezier(0.34, 1.2, 0.64, 1);
+      transform-origin: top left;
+    }
+    .nf-popover {
+      animation: nfFadeScale 0.16s cubic-bezier(0.34, 1.2, 0.64, 1);
+      transform-origin: top left;
+    }
+    @keyframes nfFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    @keyframes nfSlideUp {
+      from { opacity: 0; transform: translateY(18px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0)   scale(1);    }
+    }
+    @keyframes nfFadeScale {
+      from { opacity: 0; transform: scale(0.93); }
+      to   { opacity: 1; transform: scale(1);    }
+    }
+    button:active, [role="button"]:active {
+      transform: scale(0.96) !important;
+      opacity: 0.85 !important;
+      transition: transform 0.08s ease, opacity 0.08s ease !important;
+    }
+    button, [role="button"] {
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+    tr[style*="cursor: pointer"]:active td {
+      opacity: 0.75;
+      transition: opacity 0.08s ease;
+    }
+    .nf-clickable {
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+    }
+    .nf-clickable:active {
+      transform: scale(0.97) !important;
+      opacity: 0.82 !important;
+      transition: transform 0.08s ease, opacity 0.08s ease !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
 function DropZone({ label, sublabel, onFile, fileName }) {
   const [drag, setDrag] = useState(false);
   const handleDrop = useCallback((e) => {
@@ -627,7 +682,7 @@ function InfoTooltip({ texto }) {
     >
       <Info size={15} color={CORES.parcela} style={{ cursor: "help" }} />
       {aberto && (
-        <span style={{
+        <span className="nf-popover" style={{
           position: "absolute", bottom: "150%", left: "50%", transform: "translateX(-50%)",
           background: CORES.bgCardAlt, color: CORES.texto, fontSize: 12, fontWeight: 400, lineHeight: 1.45,
           padding: "10px 12px", borderRadius: 10, width: 230, zIndex: 20,
@@ -646,29 +701,38 @@ function InfoTooltip({ texto }) {
   );
 }
 
-function StatCard({ label, valor, color, Icon, tooltip }) {
+function StatCard({ label, valor, color, Icon, tooltip, onClick, ativo }) {
   const [hover, setHover] = useState(false);
   return (
     <div
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onClick={onClick}
+      className={onClick ? "nf-clickable" : undefined}
       style={{
         flex: "1 1 140px", minWidth: 120,
-        background: CORES.bgCard, border: `1px solid ${hover && tooltip ? CORES.bordaForte : CORES.borda}`,
+        background: ativo ? `${color}18` : CORES.bgCard,
+        border: `1px solid ${ativo ? color : (hover && tooltip ? CORES.bordaForte : CORES.borda)}`,
         borderRadius: 14, padding: "16px 16px 14px", borderLeft: `3px solid ${color}`,
-        transition: "border-color 0.15s",
+        transition: "all 0.15s",
+        cursor: onClick ? "pointer" : "default",
       }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <span style={{ fontSize: 11.5, color: CORES.textoSub, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</span>
         <Icon size={15} color={color} />
       </div>
       <div style={{ fontSize: 26, fontWeight: 700, color: CORES.texto, fontFamily: "'IBM Plex Mono', monospace" }}>{valor}</div>
-      {tooltip && hover && (
+      {tooltip && (
         <div style={{
-          marginTop: 10, paddingTop: 10,
-          borderTop: `1px solid ${CORES.borda}`,
+          overflow: "hidden",
+          maxHeight: hover ? "120px" : "0px",
+          opacity: hover ? 1 : 0,
+          marginTop: hover ? 10 : 0,
+          paddingTop: hover ? 10 : 0,
+          borderTop: hover ? `1px solid ${CORES.borda}` : "1px solid transparent",
           fontSize: 12, color: CORES.textoSub, lineHeight: 1.8,
           whiteSpace: "pre-line",
+          transition: "max-height 0.25s ease, opacity 0.2s ease, margin-top 0.2s ease, padding-top 0.2s ease",
         }}>
           {tooltip}
         </div>
@@ -842,6 +906,7 @@ function PainelEdicao({ r, onSalvar, onRestaurar, onFechar }) {
   return (
     <div
       onClick={onFechar}
+      className="nf-modal-overlay"
       style={{
         position: "fixed", inset: 0, background: "rgba(4,7,14,0.65)",
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -850,6 +915,7 @@ function PainelEdicao({ r, onSalvar, onRestaurar, onFechar }) {
     >
       <div
         onClick={e => e.stopPropagation()}
+        className="nf-modal-panel"
         style={{
           width: "100%", maxWidth: 460, maxHeight: "88vh", overflow: "auto",
           background: CORES.bgCard, border: `1px solid ${CORES.bordaForte}`, borderRadius: 16,
@@ -1047,6 +1113,7 @@ function ColunaFiltro({ label, col, todos, selecionados, onToggle, onLimpar, ord
         <span
           onClick={(e) => { e.stopPropagation(); onAbrirDropdown(aberto ? null : col); }}
           title="Filtrar"
+          className="nf-clickable"
           style={{
             cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
             width: 18, height: 18, borderRadius: 4, marginLeft: 2,
@@ -1061,6 +1128,7 @@ function ColunaFiltro({ label, col, todos, selecionados, onToggle, onLimpar, ord
       {aberto && (
         <div
           onClick={e => e.stopPropagation()}
+          className="nf-dropdown"
           style={{
             position: "absolute", top: "100%", left: 0, zIndex: 200,
             minWidth: 220, maxWidth: 320, maxHeight: 320, overflowY: "auto",
@@ -1162,6 +1230,7 @@ function TagCentroCusto({ relacionados, override }) {
     <div style={{ position: "relative" }}>
       <span
         onClick={e => { e.stopPropagation(); setAberto(a => !a); }}
+        className="nf-clickable"
         style={{
           fontSize: 12, fontWeight: 700, color: CORES.accent,
           background: CORES.accentSoft, border: `1px solid ${CORES.accentBorder}`,
@@ -1175,6 +1244,7 @@ function TagCentroCusto({ relacionados, override }) {
       {aberto && (
         <div
           onClick={e => e.stopPropagation()}
+          className="nf-popover"
           style={{
             position: "absolute", top: "calc(100% + 6px)", left: 0, zIndex: 300,
             minWidth: 260, maxWidth: 360,
@@ -1225,6 +1295,7 @@ function LinhaTabela({ r, onEditar }) {
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onClick={() => onEditar(r.id)}
+      className="nf-clickable"
       style={{ borderBottom: `1px solid ${CORES.borda}`, background: hover ? CORES.bgCardHover : "transparent", transition: "background 0.12s", cursor: "pointer" }}
     >
       <td style={{ padding: "12px 18px", borderLeft: `3px solid ${c.color}` }}>
@@ -1711,45 +1782,30 @@ export default function App() {
       {resultados && (
         <div style={{ padding: "0 20px 70px" }}>
           <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "nowrap", overflowX: "auto" }}>
-            <StatCard label={`Total ${tipoPlanilha === "nfse" ? "NFS-e" : "SIEG"}`} valor={resumo.total} color={CORES.texto} Icon={FileSpreadsheet} />
+            <StatCard label={`Total ${tipoPlanilha === "nfse" ? "NFS-e" : "SIEG"}`} valor={resumo.total} color={CORES.texto} Icon={FileSpreadsheet}
+              ativo={filtro === "todos"} onClick={() => setFiltro("todos")} />
             <StatCard
-              label="OK"
-              valor={resumo.ok}
-              color={CORES.ok}
-              Icon={CheckCircle2}
+              label="OK" valor={resumo.ok} color={CORES.ok} Icon={CheckCircle2}
               tooltip={`${resumo.ok} OK totais\n(${resumo.okPuro} OK, ${resumo.parcela} Parcelas, ${resumo.devolucao} Devoluções)`}
+              ativo={filtro === "ok"} onClick={() => setFiltro(filtro === "ok" ? "todos" : "ok")}
             />
             <StatCard label="Não lançadas" valor={resumo.naoEncontrada} color={CORES.erro} Icon={XCircle}
-              tooltip={resumo.naoEncontrada > 0 ? resumo.tooltips.naoEncontrada : undefined} />
+              tooltip={resumo.naoEncontrada > 0 ? resumo.tooltips.naoEncontrada : undefined}
+              ativo={filtro === "nao_encontrada"} onClick={() => setFiltro(filtro === "nao_encontrada" ? "todos" : "nao_encontrada")} />
             <StatCard label="Divergências" valor={resumo.divergente} color={CORES.alerta} Icon={AlertTriangle}
-              tooltip={resumo.divergente > 0 ? resumo.tooltips.divergente : undefined} />
+              tooltip={resumo.divergente > 0 ? resumo.tooltips.divergente : undefined}
+              ativo={filtro === "divergente"} onClick={() => setFiltro(filtro === "divergente" ? "todos" : "divergente")} />
             <StatCard label="Parcelas" valor={resumo.parcela} color={CORES.parcela} Icon={Receipt}
-              tooltip={resumo.parcela > 0 ? resumo.tooltips.parcela : undefined} />
+              tooltip={resumo.parcela > 0 ? resumo.tooltips.parcela : undefined}
+              ativo={filtro === "parcela"} onClick={() => setFiltro(filtro === "parcela" ? "todos" : "parcela")} />
             <StatCard label="Duplicadas" valor={resumo.duplicada} color={CORES.duplicada} Icon={Copy}
-              tooltip={resumo.duplicada > 0 ? resumo.tooltips.duplicada : undefined} />
+              tooltip={resumo.duplicada > 0 ? resumo.tooltips.duplicada : undefined}
+              ativo={filtro === "duplicada"} onClick={() => setFiltro(filtro === "duplicada" ? "todos" : "duplicada")} />
             <StatCard label="Devolução" valor={resumo.devolucao} color={CORES.devolucao} Icon={CornerDownLeft}
-              tooltip={resumo.devolucao > 0 ? resumo.tooltips.devolucao : undefined} />
+              tooltip={resumo.devolucao > 0 ? resumo.tooltips.devolucao : undefined}
+              ativo={filtro === "devolucao"} onClick={() => setFiltro(filtro === "devolucao" ? "todos" : "devolucao")} />
           </div>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
-            <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-              {[
-                { val: "todos", label: "Todos" },
-                { val: "divergencias", label: "Só problemas" },
-                { val: "nao_encontrada", label: "Não lançadas" },
-                { val: "divergente", label: "Divergências" },
-                { val: "parcela", label: "Parcelas" },
-                { val: "duplicada", label: "Duplicadas" },
-                { val: "devolucao", label: "Devolução" },
-                { val: "ok", label: "OK" },
-              ].map(f => (
-                <button key={f.val} onClick={() => setFiltro(f.val)} style={{
-                  padding: "6px 14px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
-                  border: `1px solid ${filtro === f.val ? CORES.accentBorder : CORES.borda}`,
-                  background: filtro === f.val ? CORES.accentSoft : "transparent",
-                  color: filtro === f.val ? CORES.accent : CORES.textoSub,
-                }}>{f.label}</button>
-              ))}
-            </div>
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
               <button onClick={handleSalvarSnap} style={{
                 display: "flex", alignItems: "center", gap: 7,
@@ -1854,12 +1910,12 @@ export default function App() {
       )}
 
       {painelVersions && (
-        <div onClick={() => setPainelVersions(false)} style={{
+        <div onClick={() => setPainelVersions(false)} className="nf-modal-overlay" style={{
           position: "fixed", inset: 0, background: "rgba(2,5,8,0.7)",
           display: "flex", alignItems: "center", justifyContent: "center",
           zIndex: 100, padding: 18,
         }}>
-          <div onClick={e => e.stopPropagation()} style={{
+          <div onClick={e => e.stopPropagation()} className="nf-modal-panel" style={{
             width: "100%", maxWidth: 520, maxHeight: "85vh", overflow: "auto",
             background: CORES.bgCard, border: `1px solid ${CORES.bordaForte}`,
             borderRadius: 16, padding: 22, boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
