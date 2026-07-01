@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 import {
   Search, UploadCloud, CheckCircle2, XCircle, AlertTriangle,
   Copy, Receipt, Info, Download, FileSpreadsheet, Pencil, X, RotateCcw,
-  Save, History, Clock,
+  Save, History, Clock, CornerDownLeft,
 } from "lucide-react";
 
 /* ============================== Paleta ============================== */
@@ -31,8 +31,10 @@ const CORES = {
   erroSoft: "rgba(255,93,122,0.12)",
   duplicada: "#B083FF",
   duplicadaSoft: "rgba(176,131,255,0.12)",
-  parcela: "#6FD6FF",
-  parcelaSoft: "rgba(111,214,255,0.10)",
+  parcela: "#FFFFFF",
+  parcelaSoft: "rgba(255,255,255,0.10)",
+  devolucao: "#6FD6FF",
+  devolucaoSoft: "rgba(111,214,255,0.10)",
 };
 
 const STATUS_CONFIG = {
@@ -41,6 +43,7 @@ const STATUS_CONFIG = {
   divergente: { label: "Divergência", color: CORES.alerta, bg: CORES.alertaSoft, Icon: AlertTriangle },
   duplicada: { label: "Duplicada", color: CORES.duplicada, bg: CORES.duplicadaSoft, Icon: Copy },
   parcela: { label: "Parcela", color: CORES.parcela, bg: CORES.parcelaSoft, Icon: Receipt },
+  devolucao: { label: "Devolução", color: CORES.devolucao, bg: CORES.devolucaoSoft, Icon: CornerDownLeft },
 };
 
 // Status efetivo de um resultado: o status manual (override do usuário), se houver,
@@ -400,6 +403,7 @@ function gerarExcel(resultados, tipoPlanilha) {
     divergente: "Divergência",
     ok: "OK",
     parcela: "Parcela",
+    devolucao: "Devolução",
   };
   const rotuloFonte = tipoPlanilha === "nfse" ? "NFS-e" : "SIEG";
 
@@ -642,18 +646,33 @@ function InfoTooltip({ texto }) {
   );
 }
 
-function StatCard({ label, valor, color, Icon }) {
+function StatCard({ label, valor, color, Icon, tooltip }) {
+  const [hover, setHover] = useState(false);
   return (
-    <div style={{
-      flex: "1 1 140px", minWidth: 120,
-      background: CORES.bgCard, border: `1px solid ${CORES.borda}`, borderRadius: 14,
-      padding: "16px 16px 14px", borderLeft: `3px solid ${color}`,
-    }}>
+    <div
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        flex: "1 1 140px", minWidth: 120,
+        background: CORES.bgCard, border: `1px solid ${hover && tooltip ? CORES.bordaForte : CORES.borda}`,
+        borderRadius: 14, padding: "16px 16px 14px", borderLeft: `3px solid ${color}`,
+        transition: "border-color 0.15s",
+      }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <span style={{ fontSize: 11.5, color: CORES.textoSub, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</span>
         <Icon size={15} color={color} />
       </div>
       <div style={{ fontSize: 26, fontWeight: 700, color: CORES.texto, fontFamily: "'IBM Plex Mono', monospace" }}>{valor}</div>
+      {tooltip && hover && (
+        <div style={{
+          marginTop: 10, paddingTop: 10,
+          borderTop: `1px solid ${CORES.borda}`,
+          fontSize: 12, color: CORES.textoSub, lineHeight: 1.8,
+          whiteSpace: "pre-line",
+        }}>
+          {tooltip}
+        </div>
+      )}
     </div>
   );
 }
@@ -682,7 +701,118 @@ const STATUS_MANUAL_OPCOES = [
   { val: "nao_encontrada", label: "Não lançado" },
   { val: "parcela", label: "Parcela" },
   { val: "duplicada", label: "Duplicada" },
+  { val: "devolucao", label: "Devolução" },
 ];
+
+const CENTROS_DE_CUSTO = [
+  "CMFOR OPERACIONAL 1 (Nº 309/2025)",
+  "SEHAB-SP OPERACIONAL 1",
+  "Call Center Detran-CE OPERACIONAL 1 (Nº 103/2025)",
+  "Galpão de Itupeva OPERACIONAL 1",
+  "AMC OPERACIONAL 1 (09/2022 4 ADT)",
+  "Galpao/SEHAB-SP OPERACIONAL 1",
+  "Galpao/Detran-ce OPERACIONAL 1",
+  "CUSTO OPERACIONAL 1",
+  "Galpao/MEC OPERACIONAL 1",
+  "CONAB - DF OPERACIONAL 1 (Nº: 003/2026)",
+  "Arrais Veiculos OPERACIONAL 1",
+  "CRN OPERACIONAL 1",
+  "Galpao/SEHAB OPERACIONAL 1",
+  "IPME OPERACIONAL 1 (2024.05.28.001 ADT)",
+  "SESC/SENAC OPERACIONAL 1 (N° 407/2022 3° ADT)",
+  "APACEFOR OPERACIONAL 1",
+  "COMERCIAL NOVO CFC (DESPESA)",
+  "Call Center Detran-CE OPERACIONAL 1",
+  "MEC-DF OPERACIONAL 1",
+  "GALPAO CE OPERACIONAL 1",
+  "CONFEA OPERACIONAL 1 (Nº 309/2025)",
+  "Galpao/AMC Atendimento OPERACIONAL 1",
+  "UFC OPERACIONAL 1",
+  "DETRAN PATIO OPERACIONAL 1 (N° 334/2023 2 ADT)",
+  "CGE OPERACIONAL 1",
+  "PLANEJAMENTO (DESPESA)",
+  "ESP CE OPERACIONAL 1 (N°: 15/2024 2° ADT)",
+  "Inovação OPERACIONAL",
+  "JOSE MURILO CIRINO OPERACIONAL 1",
+  "SEGER OPERACIONAL 1 (N° 25/2022 3 ADT)",
+  "Compras",
+  "FWA OPERACIONAL",
+  "CREA-SP OPERACIONAL 1 (N° 19/2024 ADT)",
+  "Galpao/GARDEN OPERACIONAL 1",
+  "FACILITIES (DESPESA)",
+  "ESS VEICULOS OPERACIONAL 1",
+  "ETICE - OPERACIONAL 1 (Nº 06/2023 ADT)",
+  "SEFAZ OPERACIONAL 1 (N°: 053/2024 ADT)",
+  "Galpao/PMA OPERACIONAL 1",
+  "HEMOCE OPERACIONAL 1 (Nº 1313/2025)",
+  "TRF OPERACIONAL 1 (N° 0405210/2023 3 ADT)",
+  "CTC OPERACIONAL 1",
+  "Galpao/Omnimagem OPERACIONAL 1",
+  "Transito OPERACIONAL",
+  "ETUFOR OPERACIONAL 1 (N°: 002/2026)",
+  "CEARAPREV OPERACIONAL 1 (N° 002/2024 3° ADT)",
+  "FORT GLASS OPERACIONAL 1 (N° 1013/2025)",
+  "DIRETORIA",
+  "Departamento Pessoal (DESPESA)",
+  "Sigam Operacional",
+  "OMINIMAGEM OPERACIONAL 1",
+  "GODOCS OPERACIONAL",
+  "Prefeitura Eusebio OPERACIONAL 1",
+  "Sos docs OPERACIONAL 1",
+  "EXITO SERVICOS DE APOIO ADMINISTRATIVO OPERACIONAL 1",
+  "AGROPECUARIA OPERACIONAL 1",
+  "Agile Locação de Veiculos OPERACIONAL 1",
+  "Diretoria 2",
+  "NOVOCFC OPERACIONAL 1",
+  "SINGSERV PRESTACAO DE SERVICOS OPERACIONAL 1",
+  "CARTORIO QUERENCIA OPERACIONAL 1",
+  "SP LOCACAO DE MAO DE OBRA LTDA OPERACIONAL 1",
+  "ÚNICA OPERACIONAL 1",
+  "Galpão Eusebio OPERACIONAL 1",
+  "Despesas Patrimonial",
+  "SME-SP OPERACIONAL 1",
+  "Suporte Tecnico OPERACIONAL",
+  "TJ RS OPERACIONAL 1",
+  "e-Identidade OPERACIONAL",
+  "MARKETING (DESPESA)",
+  "RH e DEPARTAMENTO PESSOAL (DESPESA)",
+  "SDHDS OPERACIONAL 1",
+  "Detran-CE Atendimento OPERACIONAL 1",
+  "AMC PATIO VEICULAR OPERACIONAL 1",
+  "DESPESAS COMERCIAL",
+  "DIRETORIA 1",
+  "CLUBFUT OPERACIONAL",
+  "IHGF OPERACIONAL 1",
+  "IBF",
+  "AMC DIVIDA ATIVA OPERACIONAL 1",
+  "PATIO DETRAN",
+  "PATIO AMC",
+  "DESENVOLVIMENTO OPERACIONAL",
+  "Administrativo (DESPESA)",
+  "GARDEN OPERACIONAL 1",
+  "Galpao/CMFOR OPERACIONAL 1",
+  "Prefeitura Aquiraz OPERACIONAL 1",
+  "PRODESP OPERACIONAL 1",
+  "PROCON - GO OPERACIONAL 1",
+  "Galpão Crea-Sp OPERACIONAL 1",
+  "QUALIDADE / PCP OPERACIONAL",
+  "Prefeitura Aracati OPERACIONAL 1",
+  "Desenvolvimento NOVOCFC OPERACIONAL",
+  "Galpao de Brasilia OPERACIONAL 1",
+  "CENTEC OPERACIONAL 1 (N° 080/2024)",
+  "ArcelorMittal OPERACIONAL 1",
+  "DESENVOLVIMENTO CMFOR OPERACIONAL",
+  "MEC-DF OPERACIONAL 1 (15/2024 ADT)",
+  "SEHAB-SP OPERACIONAL 1 (01/12/2024 ADT)",
+  "ALECE OPERACIONAL 1",
+  "Desenvolvimento ALECE OPERACIONAL",
+  "AMC PATIO VEICULAR OPERACIONAL 1 (N° 36/2023 2 ADT)",
+  "Sergio Telerman OPERACIONAL",
+  "Galpao/PME OPERACIONAL 1",
+  "Galpão SME-SP OPERACIONAL 1",
+  "POLÍCIA CIVIL CE OPERACIONAL 1 (Nº 077/2025)",
+  "Detran-CE OPERACIONAL 1 (N° 318/2023 2 ADT)",
+].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
 const CUSTO_DESPESA_OPCOES = [
   { val: "", label: "Não classificado" },
@@ -693,14 +823,21 @@ const CUSTO_DESPESA_OPCOES = [
 function PainelEdicao({ r, onSalvar, onRestaurar, onFechar }) {
   const [statusManual, setStatusManual] = useState(r.statusManual || "");
   const [custoDespesaManual, setCustoDespesaManual] = useState(r.custoDespesaManual || "");
+  const [centroCustoManual, setCentroCustoManual] = useState(r.centroCustoManual || "");
   const [observacao, setObservacao] = useState(r.observacao || "");
+  const [buscaCentro, setBuscaCentro] = useState("");
 
   const relacionados = r.lancamentosRelacionados || (r.lancamento ? [r.lancamento] : []);
   const valoresCA = relacionados.length
     ? relacionados.map(l => `R$ ${l.valor.toFixed(2)}`).join(" + ")
     : "—";
 
-  const temOverride = !!(r.statusManual || r.custoDespesaManual || r.observacao);
+  const temOverride = !!(r.statusManual || r.custoDespesaManual || r.centroCustoManual || r.observacao);
+
+  const centroAtual = centroCustoManual || (relacionados[0]?.centroCusto || "");
+  const centrosFiltrados = buscaCentro.trim()
+    ? CENTROS_DE_CUSTO.filter(c => normalizarTexto(c).includes(normalizarTexto(buscaCentro)))
+    : CENTROS_DE_CUSTO;
 
   return (
     <div
@@ -789,6 +926,52 @@ function PainelEdicao({ r, onSalvar, onRestaurar, onFechar }) {
         </div>
 
         <div style={{ fontSize: 12, fontWeight: 700, color: CORES.textoSub, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 8 }}>
+          Centro de Custo
+        </div>
+        {centroAtual && (
+          <div style={{ fontSize: 12, color: CORES.textoSub, marginBottom: 6 }}>
+            Atual: <strong style={{ color: CORES.texto }}>{centroAtual}</strong>
+            {centroCustoManual && (
+              <button onClick={() => { setCentroCustoManual(""); setBuscaCentro(""); }} style={{
+                marginLeft: 8, fontSize: 11, color: CORES.textoFraco, background: "none",
+                border: "none", cursor: "pointer", textDecoration: "underline",
+              }}>limpar</button>
+            )}
+          </div>
+        )}
+        <input
+          value={buscaCentro}
+          onChange={e => setBuscaCentro(e.target.value)}
+          placeholder="Buscar centro de custo…"
+          style={{
+            width: "100%", borderRadius: 8, padding: "8px 12px", marginBottom: 6,
+            background: CORES.bgCardAlt, border: `1px solid ${CORES.borda}`,
+            color: CORES.texto, fontSize: 13, fontFamily: "inherit", outline: "none",
+          }}
+        />
+        <div style={{
+          maxHeight: 160, overflowY: "auto", borderRadius: 8,
+          border: `1px solid ${CORES.borda}`, background: CORES.bgCardAlt, marginBottom: 18,
+        }}>
+          {centrosFiltrados.length === 0 ? (
+            <div style={{ padding: "10px 12px", fontSize: 12.5, color: CORES.textoFraco }}>Nenhum resultado.</div>
+          ) : centrosFiltrados.map(c => (
+            <div
+              key={c}
+              onClick={() => { setCentroCustoManual(c); setBuscaCentro(""); }}
+              style={{
+                padding: "7px 12px", fontSize: 12.5, cursor: "pointer",
+                color: centroCustoManual === c ? CORES.accent : CORES.texto,
+                background: centroCustoManual === c ? CORES.accentSoft : "transparent",
+                borderBottom: `1px solid ${CORES.borda}`,
+              }}
+              onMouseEnter={e => { if (centroCustoManual !== c) e.currentTarget.style.background = CORES.bgCardHover; }}
+              onMouseLeave={e => { if (centroCustoManual !== c) e.currentTarget.style.background = "transparent"; }}
+            >{c}</div>
+          ))}
+        </div>
+
+        <div style={{ fontSize: 12, fontWeight: 700, color: CORES.textoSub, textTransform: "uppercase", letterSpacing: "0.03em", marginBottom: 8 }}>
           Observação
         </div>
         <textarea
@@ -818,7 +1001,7 @@ function PainelEdicao({ r, onSalvar, onRestaurar, onFechar }) {
             </button>
           )}
           <button
-            onClick={() => onSalvar(r.id, { statusManual, custoDespesaManual, observacao })}
+            onClick={() => onSalvar(r.id, { statusManual, custoDespesaManual, centroCustoManual, observacao })}
             style={{
               flex: 1, padding: "11px 14px", borderRadius: 10, border: "none",
               background: `linear-gradient(135deg, ${CORES.accent}, ${CORES.accentDark})`,
@@ -935,14 +1118,26 @@ function ColunaFiltro({ label, col, todos, selecionados, onToggle, onLimpar, ord
   );
 }
 
-function TagCentroCusto({ relacionados }) {
+function TagCentroCusto({ relacionados, override }) {
   const [aberto, setAberto] = useState(false);
+
+  // Se houver override manual, exibe só ele com indicador de edição
+  if (override) {
+    return (
+      <span style={{
+        fontSize: 11.5, color: CORES.accent, whiteSpace: "nowrap",
+        overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: 180,
+        fontStyle: "italic",
+      }} title={override}>
+        {override}
+      </span>
+    );
+  }
+
   const centros = relacionados
     .filter(l => l.centroCusto)
     .map(l => ({ nome: l.centroCusto, valor: l.valor }));
 
-  const unicos = [...new Map(centros.map(c => [c.nome, c])).values()];
-  // Se um mesmo centro aparece em mais de um lançamento, soma os valores
   const agrupado = Object.values(
     centros.reduce((acc, { nome, valor }) => {
       acc[nome] = acc[nome] || { nome, valor: 0 };
@@ -1024,7 +1219,7 @@ function LinhaTabela({ r, onEditar }) {
   const c = STATUS_CONFIG[tipoEfetivo] || STATUS_CONFIG.ok;
   const relacionados = r.lancamentosRelacionados || (r.lancamento ? [r.lancamento] : []);
   const custoDespesa = r.custoDespesaManual || r.custoDespesaPlanilha || Array.from(new Set(relacionados.map(l => l.custoDespesa).filter(Boolean))).join(" / ");
-  const foiEditado = !!(r.statusManual || r.custoDespesaManual || r.observacao);
+  const foiEditado = !!(r.statusManual || r.custoDespesaManual || r.centroCustoManual || r.observacao);
 
   return (
     <tr
@@ -1044,6 +1239,9 @@ function LinhaTabela({ r, onEditar }) {
           )}
         </div>
       </td>
+      <td style={{ padding: "12px 18px", color: CORES.textoSub, fontFamily: "'IBM Plex Mono', monospace", fontSize: 12.5, whiteSpace: "nowrap" }}>
+        {r.nf.dataEmissao ? String(r.nf.dataEmissao).slice(0, 10) : "—"}
+      </td>
       <td style={{ padding: "12px 18px", color: CORES.textoSub }}>{r.nf.aba}</td>
       <td style={{ padding: "12px 18px", fontWeight: 700, fontFamily: "'IBM Plex Mono', monospace" }}>NF {r.nf.numNF}</td>
       <td style={{ padding: "12px 18px", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={r.nf.fornecedor}>{r.nf.fornecedor}</td>
@@ -1054,7 +1252,7 @@ function LinhaTabela({ r, onEditar }) {
           : relacionados.length === 1 ? `R$ ${relacionados[0].valor.toFixed(2)}` : "—"}
       </td>
       <td style={{ padding: "12px 18px" }} onClick={e => e.stopPropagation()}>
-        <TagCentroCusto relacionados={relacionados} />
+        <TagCentroCusto relacionados={relacionados} override={r.centroCustoManual} />
       </td>
       <td style={{ padding: "12px 18px" }}><TagCustoDespesa valor={custoDespesa} divergente={!r.custoDespesaManual && r.custoDespesaDivergente} /></td>
       <td style={{ padding: "12px 18px", fontSize: 12, color: tipoEfetivo === "ok" ? (isParcelaEfetiva(r) ? CORES.textoSub : CORES.ok) : c.color }}>
@@ -1078,35 +1276,41 @@ function chaveNF(tipoPlanilha, aba, numNF) {
 }
 
 async function carregarEdicoesSalvas(tipoPlanilha, resultados) {
-  return resultados.map(r => {
+  const editadasComStorage = [];
+  for (const r of resultados) {
     try {
       const chave = chaveNF(tipoPlanilha, r.nf.aba, r.nf.numNF);
-      const raw = localStorage.getItem(chave);
-      if (!raw) return r;
-      const ed = JSON.parse(raw);
-      return {
-        ...r,
-        statusManual: ed.statusManual || undefined,
-        custoDespesaManual: ed.custoDespesaManual || undefined,
-        observacao: ed.observacao || undefined,
-      };
+      const saved = await window.storage.get(chave);
+      if (saved) {
+        const ed = JSON.parse(saved.value);
+        editadasComStorage.push({
+          ...r,
+          statusManual: ed.statusManual || undefined,
+          custoDespesaManual: ed.custoDespesaManual || undefined,
+          centroCustoManual: ed.centroCustoManual || undefined,
+          observacao: ed.observacao || undefined,
+        });
+      } else {
+        editadasComStorage.push(r);
+      }
     } catch {
-      return r;
+      editadasComStorage.push(r);
     }
-  });
+  }
+  return editadasComStorage;
 }
 
 async function persistirEdicao(tipoPlanilha, r, edicao) {
   const chave = chaveNF(tipoPlanilha, r.nf.aba, r.nf.numNF);
-  const temDado = edicao.statusManual || edicao.custoDespesaManual || edicao.observacao;
+  const temDado = edicao.statusManual || edicao.custoDespesaManual || edicao.centroCustoManual || edicao.observacao;
   try {
     if (temDado) {
-      localStorage.setItem(chave, JSON.stringify(edicao));
+      await window.storage.set(chave, JSON.stringify(edicao));
     } else {
-      localStorage.removeItem(chave);
+      await window.storage.delete(chave);
     }
   } catch {
-    // storage indisponível (ex.: modo privado do navegador) — continua sem persistência
+    // storage indisponível: continua sem persistência (não quebra o fluxo)
   }
 }
 
@@ -1128,16 +1332,17 @@ async function salvarSnapshot(tipoPlanilha, resultados, nome) {
         aba: r.nf.aba, numNF: r.nf.numNF,
         statusManual: r.statusManual,
         custoDespesaManual: r.custoDespesaManual,
+        centroCustoManual: r.centroCustoManual,
         observacao: r.observacao,
       })),
     };
-    localStorage.setItem(chave, JSON.stringify(payload));
+    await window.storage.set(chave, JSON.stringify(payload));
     // Limitar a MAX_SNAPSHOTS versões — apagar as mais antigas se exceder
     const lista = await listarSnapshots(tipoPlanilha);
     if (lista.length > MAX_SNAPSHOTS) {
       const paraApagar = lista.slice(MAX_SNAPSHOTS);
       for (const s of paraApagar) {
-        localStorage.removeItem(PREFIXO_SNAP + tipoPlanilha + ":" + s.ts);
+        await window.storage.delete(PREFIXO_SNAP + tipoPlanilha + ":" + s.ts);
       }
     }
     return ts;
@@ -1147,15 +1352,13 @@ async function salvarSnapshot(tipoPlanilha, resultados, nome) {
 async function listarSnapshots(tipoPlanilha) {
   try {
     const prefix = PREFIXO_SNAP + tipoPlanilha + ":";
+    const keys = await window.storage.list(prefix);
     const snaps = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(prefix)) {
-        try {
-          const raw = localStorage.getItem(key);
-          if (raw) snaps.push(JSON.parse(raw));
-        } catch { /* ignora entradas corrompidas */ }
-      }
+    for (const key of (keys.keys || [])) {
+      try {
+        const raw = await window.storage.get(key);
+        if (raw) snaps.push(JSON.parse(raw.value));
+      } catch { /* ignora entradas corrompidas */ }
     }
     return snaps.sort((a, b) => b.ts - a.ts); // mais recente primeiro
   } catch { return []; }
@@ -1163,7 +1366,7 @@ async function listarSnapshots(tipoPlanilha) {
 
 async function deletarSnapshot(tipoPlanilha, ts) {
   try {
-    localStorage.removeItem(PREFIXO_SNAP + tipoPlanilha + ":" + ts);
+    await window.storage.delete(PREFIXO_SNAP + tipoPlanilha + ":" + ts);
   } catch { /* ignora */ }
 }
 
@@ -1178,6 +1381,7 @@ function aplicarSnapshot(snap, resultados) {
       ...r,
       statusManual: ed.statusManual || undefined,
       custoDespesaManual: ed.custoDespesaManual || undefined,
+      centroCustoManual: ed.centroCustoManual || undefined,
       observacao: ed.observacao || undefined,
     };
   });
@@ -1201,7 +1405,7 @@ export default function App() {
   const [msgSnap, setMsgSnap] = useState("");
   const [ordemCol, setOrdemCol] = useState(null);
   const [ordemDir, setOrdemDir] = useState("asc");
-  const FILTRO_COL_VAZIO = { status: null, filial: null, numNF: null, fornecedor: null, valorSIEG: null, valorCA: null, centroCusto: null, custoDespesa: null };
+  const FILTRO_COL_VAZIO = { status: null, data: null, filial: null, numNF: null, fornecedor: null, valorSIEG: null, valorCA: null, centroCusto: null, custoDespesa: null };
   const [filtroCol, setFiltroCol] = useState(FILTRO_COL_VAZIO);
   const [dropdownAberto, setDropdownAberto] = useState(null);
 
@@ -1255,6 +1459,7 @@ export default function App() {
         ...r,
         statusManual: edicao.statusManual || undefined,
         custoDespesaManual: edicao.custoDespesaManual || undefined,
+        centroCustoManual: edicao.centroCustoManual || undefined,
         observacao: edicao.observacao || undefined,
       });
       const alvo = next.find(r => r.id === id);
@@ -1272,6 +1477,7 @@ export default function App() {
         ...r,
         statusManual: undefined,
         custoDespesaManual: undefined,
+        centroCustoManual: undefined,
       });
     });
     setEditandoId(null);
@@ -1335,12 +1541,13 @@ export default function App() {
   const filtrados = (() => {
     const base = !resultados ? [] :
       filtro === "todos" ? resultados :
-      filtro === "divergencias" ? resultados.filter(r => ["nao_encontrada", "divergente", "duplicada"].includes(statusEfetivo(r))) :
+      filtro === "divergencias" ? resultados.filter(r => ["nao_encontrada", "divergente", "duplicada", "devolucao"].includes(statusEfetivo(r))) :
       filtro === "parcela" ? resultados.filter(isParcelaEfetiva) :
       resultados.filter(r => statusEfetivo(r) === filtro);
 
     let f = base;
     if (filtroCol.status)      f = f.filter(r => filtroCol.status.has(STATUS_CONFIG[statusEfetivo(r)]?.label || statusEfetivo(r)));
+    if (filtroCol.data)        f = f.filter(r => filtroCol.data.has(r.nf.dataEmissao ? String(r.nf.dataEmissao).slice(0, 10) : "—"));
     if (filtroCol.filial)      f = f.filter(r => filtroCol.filial.has(r.nf.aba));
     if (filtroCol.numNF)       f = f.filter(r => filtroCol.numNF.has(r.nf.numNF));
     if (filtroCol.fornecedor)  f = f.filter(r => filtroCol.fornecedor.has(r.nf.fornecedor));
@@ -1365,13 +1572,29 @@ export default function App() {
   })();
 
   // StatCards reagem aos filtros ativos — contam a partir dos itens visíveis na tabela
+  const nfsPor = (predicate) => filtrados.filter(predicate).map(r => `NF ${r.nf.numNF}`);
+  const formatarNFs = (nfs) => {
+    if (nfs.length === 0) return "Nenhuma";
+    const MAX = 10;
+    const linhas = nfs.slice(0, MAX).join(", ");
+    return nfs.length > MAX ? linhas + ` e mais ${nfs.length - MAX}…` : linhas;
+  };
   const resumo = resultados ? {
     total: filtrados.length,
-    ok: filtrados.filter(r => statusEfetivo(r) === "ok").length,
+    okPuro: filtrados.filter(r => statusEfetivo(r) === "ok" && !isParcelaEfetiva(r) && statusEfetivo(r) !== "devolucao").length,
+    parcela: filtrados.filter(isParcelaEfetiva).length,
+    devolucao: filtrados.filter(r => statusEfetivo(r) === "devolucao").length,
+    get ok() { return this.okPuro + this.parcela + this.devolucao; },
     naoEncontrada: filtrados.filter(r => statusEfetivo(r) === "nao_encontrada").length,
     divergente: filtrados.filter(r => statusEfetivo(r) === "divergente").length,
-    parcela: filtrados.filter(isParcelaEfetiva).length,
     duplicada: filtrados.filter(r => statusEfetivo(r) === "duplicada").length,
+    tooltips: {
+      naoEncontrada: formatarNFs(nfsPor(r => statusEfetivo(r) === "nao_encontrada")),
+      divergente: formatarNFs(nfsPor(r => statusEfetivo(r) === "divergente")),
+      parcela: formatarNFs(nfsPor(isParcelaEfetiva)),
+      duplicada: formatarNFs(nfsPor(r => statusEfetivo(r) === "duplicada")),
+      devolucao: formatarNFs(nfsPor(r => statusEfetivo(r) === "devolucao")),
+    },
   } : null;
 
   const itemEditando = resultados && editandoId !== null ? resultados.find(r => r.id === editandoId) : null;
@@ -1490,11 +1713,23 @@ export default function App() {
         <div style={{ padding: "0 20px 70px" }}>
           <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "nowrap", overflowX: "auto" }}>
             <StatCard label={`Total ${tipoPlanilha === "nfse" ? "NFS-e" : "SIEG"}`} valor={resumo.total} color={CORES.texto} Icon={FileSpreadsheet} />
-            <StatCard label="OK" valor={resumo.ok} color={CORES.ok} Icon={CheckCircle2} />
-            <StatCard label="Não lançadas" valor={resumo.naoEncontrada} color={CORES.erro} Icon={XCircle} />
-            <StatCard label="Divergências" valor={resumo.divergente} color={CORES.alerta} Icon={AlertTriangle} />
-            <StatCard label="Parcelas" valor={resumo.parcela} color={CORES.parcela} Icon={Receipt} />
-            <StatCard label="Duplicadas" valor={resumo.duplicada} color={CORES.duplicada} Icon={Copy} />
+            <StatCard
+              label="OK"
+              valor={resumo.ok}
+              color={CORES.ok}
+              Icon={CheckCircle2}
+              tooltip={`${resumo.ok} OK totais\n(${resumo.okPuro} OK, ${resumo.parcela} Parcelas, ${resumo.devolucao} Devoluções)`}
+            />
+            <StatCard label="Não lançadas" valor={resumo.naoEncontrada} color={CORES.erro} Icon={XCircle}
+              tooltip={resumo.naoEncontrada > 0 ? resumo.tooltips.naoEncontrada : undefined} />
+            <StatCard label="Divergências" valor={resumo.divergente} color={CORES.alerta} Icon={AlertTriangle}
+              tooltip={resumo.divergente > 0 ? resumo.tooltips.divergente : undefined} />
+            <StatCard label="Parcelas" valor={resumo.parcela} color={CORES.parcela} Icon={Receipt}
+              tooltip={resumo.parcela > 0 ? resumo.tooltips.parcela : undefined} />
+            <StatCard label="Duplicadas" valor={resumo.duplicada} color={CORES.duplicada} Icon={Copy}
+              tooltip={resumo.duplicada > 0 ? resumo.tooltips.duplicada : undefined} />
+            <StatCard label="Devolução" valor={resumo.devolucao} color={CORES.devolucao} Icon={CornerDownLeft}
+              tooltip={resumo.devolucao > 0 ? resumo.tooltips.devolucao : undefined} />
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10, marginBottom: 14 }}>
             <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
@@ -1505,6 +1740,7 @@ export default function App() {
                 { val: "divergente", label: "Divergências" },
                 { val: "parcela", label: "Parcelas" },
                 { val: "duplicada", label: "Duplicadas" },
+                { val: "devolucao", label: "Devolução" },
                 { val: "ok", label: "OK" },
               ].map(f => (
                 <button key={f.val} onClick={() => setFiltro(f.val)} style={{
@@ -1556,11 +1792,12 @@ export default function App() {
           <div style={{ background: CORES.bgCard, border: `1px solid ${CORES.borda}`, borderRadius: 14, overflowX: "auto" }}
             onClick={() => dropdownAberto && setDropdownAberto(null)}
           >
-            <table style={{ width: "100%", minWidth: 1100, borderCollapse: "collapse", fontSize: 13 }}>
+            <table style={{ width: "100%", minWidth: 1220, borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ background: CORES.bgCardAlt }}>
                   {[
                     { label: "Status",    col: "status",      getVal: r => STATUS_CONFIG[statusEfetivo(r)]?.label || statusEfetivo(r) },
+                    { label: "Data",      col: "data",         getVal: r => r.nf.dataEmissao ? String(r.nf.dataEmissao).slice(0, 10) : "—" },
                     { label: "Filial",    col: "filial",       getVal: r => r.nf.aba },
                     { label: "Num NF",    col: "numNF",        getVal: r => r.nf.numNF },
                     { label: `Fornecedor ${tipoPlanilha === "nfse" ? "NFS-e" : "SIEG"}`, col: "fornecedor", getVal: r => r.nf.fornecedor },
@@ -1609,7 +1846,7 @@ export default function App() {
               </thead>
               <tbody>
                 {filtrados.length === 0 ? (
-                  <tr><td colSpan={10} style={{ padding: 30, textAlign: "center", color: CORES.textoFraco }}>Nenhum item nesta categoria.</td></tr>
+                  <tr><td colSpan={11} style={{ padding: 30, textAlign: "center", color: CORES.textoFraco }}>Nenhum item nesta categoria.</td></tr>
                 ) : filtrados.map((r) => <LinhaTabela key={r.id} r={r} onEditar={setEditandoId} />)}
               </tbody>
             </table>
