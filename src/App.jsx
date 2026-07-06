@@ -590,24 +590,24 @@ if (typeof document !== "undefined" && !document.getElementById("nf-transitions"
       to   { opacity: 1; transform: scale(1);    }
     }
     button:active, [role="button"]:active {
-      transform: scale(0.96) !important;
-      opacity: 0.85 !important;
-      transition: transform 0.08s ease, opacity 0.08s ease !important;
+      transform: scale(0.97) !important;
+      opacity: 0.88 !important;
+      transition: transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.18s ease !important;
     }
     button, [role="button"] {
-      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+      transition: transform 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.22s ease, background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
     tr[style*="cursor: pointer"]:active td {
-      opacity: 0.75;
-      transition: opacity 0.08s ease;
+      opacity: 0.82;
+      transition: opacity 0.18s ease;
     }
     .nf-clickable {
-      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.22s ease, background 0.2s ease, border-color 0.2s ease;
     }
     .nf-clickable:active {
-      transform: scale(0.97) !important;
-      opacity: 0.82 !important;
-      transition: transform 0.08s ease, opacity 0.08s ease !important;
+      transform: scale(0.98) !important;
+      opacity: 0.85 !important;
+      transition: transform 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.18s ease !important;
     }
   `;
   document.head.appendChild(style);
